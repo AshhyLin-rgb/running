@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>2026 跑步訓練紀錄表</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="訓練打卡">
+
+    <style>
+        /* 顏色變數定義 */
+        :root {
+            /* 深色模式變數 (New Dark) */
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --brand-green: #2ecc71;
+            --brand-blue: #00d2ff;
+            --modal-bg: #1a1a1a;
+            --input-bg: #242424;
+            --border-color: #2c2c2c;
+            --toggle-bg: #2c2c2c;
+        }
+
+        [data-theme="light"] {
+            /* 淺色模式變數 (New Light) */
+            --bg-color: #f5f6f8;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #757575;
+            --brand-green: #27ae60;
+            --brand-blue: #29b6f6;
+            --modal-bg: #ffffff;
+            --input-bg: #f0f2f5;
+            --border-color: #e0e0e0;
+            --toggle-bg: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            padding-bottom: 60px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Header 儀表板 */
+        .header {
+            margin-bottom: 20px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .header-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+        .header-title {
+            font-size: 26px;
+            font-weight: bold;
+        }
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+        
+        /* 深淺色主題切換鈕 */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+        }
+        .stat-item {
+            text-align: right;
+        }
+        .stat-num {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--brand-blue);
+        }
+        .stat-num.week {
+            color: var(--brand-green);
+        }
+        .stat-unit {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: -2px;
+        }
+
+        /* 月份與視角控制列 */
+        .control-panel {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .month-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .month-btn {
+            background: none;
+            border: none;
+            color: var(--brand-green);
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        .month-title {
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* 視角切換器 (Segmented Control) */
+        .view-switcher {
+            display: flex;
+            background-color: var(--toggle-bg);
+            padding: 3px;
+            border-radius: 10px;
+        }
+        .view-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 0;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .view-btn.active {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 視卡片列表樣式 (List View) */
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        .card:active {
+            filter: brightness(0.9);
+        }
+        .card.is-today {
+            border: 1.5px solid var(--brand-green);
+        }
+        .card-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .card-date {
+            text-align: center;
+            min-width: 45px;
+        }
+        .date-w {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+        .card.sat .date-w, .card.sun .date-w {
+            color: #e74c3c;
+        }
+        .date-d {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .card.is-today .date-d {
+            color: var(--brand-green);
+            font-weight: bold;
+        }
+        .card-info-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .card-info-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .check-circle {
+            width: 26px;
+            height: 26px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card.completed .check-circle {
+            border-color: var(--brand-green);
+            background-color: var(--brand-green);
+        }
+        .card.completed .check-circle::after {
+            content: "✓";
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        body[data-theme="light"] .card.completed .check-circle::after {
+            color: #fff;
+        }
+        .card.completed .card-info-title {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        /* 傳統月曆樣式 (Calendar View) */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-weekday {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-muted);
+            padding-bottom: 8px;
+        }
+        .calendar-weekday.sat, .calendar-weekday.sun {
+            color: #e74c3c;
+        }
+        .cell {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            aspect-ratio: 1 / 1.1;
+            padding: 6px 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            position: relative;
+        }
+        .cell:active {
+            filter: brightness(0.9);
+        }
+        .cell-num {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .cell.empty {
+            background: none;
+            border: none;
+            pointer-events: none;
+        }
+        .cell.sat .cell-num, .cell.sun .cell-num {
+            color: #e74c3c;
+        }
+        .cell.is-today {
+            border: 1.5px solid var(--brand-green);
+        }
+        .cell-km {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--brand-green);
+            background-color: rgba(46, 204, 113, 0.15);
+            padding: 2px 4px;
+            border-radius: 4px;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .cell-dot {
+            width: 4px;
+            height: 4px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        /* 彈窗 Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: var(--modal-bg);
+            width: 100%;
+            max-width: 500px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            border-top: 1px solid var(--border-color);
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-date {
+            font-size: 13px;
+            color: var(--brand-green);
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+        .form-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .form-input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+        }
+        .form-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: var(--brand-green);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+        .btn-cancel {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <p class="header-subtitle">2026 TRAINING LOG</p>
+            <h1 class="header-title">訓練計畫表</h1>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="theme-toggle-btn">🌙</button>
+            <div class="stats">
+                <div class="stat-item">
+                    <div><span class="stat-num" id="total-km">0</span><span class="stat-unit">km</span></div>
+                    <span class="stat-label">本月累積</span>
+                </div>
+                <div class="stat-item">
+                    <div><span class="stat-num week" id="done-count">0</span><span class="stat-unit">次</span></div>
+                    <span class="stat-label">本月完成</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="month-selector">
+            <button class="month-btn" id="prev-month">◀</button>
+            <div class="month-title" id="month-display">2026 ・ 1月</div>
+            <button class="month-btn" id="next-month">▶</button>
+        </div>
+        
+        <div class="view-switcher">
+            <button class="view-btn active" id="view-list-btn">清單列表</button>
+            <button class="view-btn" id="view-cal-btn">傳統月曆</button>
+        </div>
+    </div>
+
+    <div class="schedule-list" id="list-view-container"></div>
+
+    <div id="cal-view-container" class="hidden">
+        <div class="calendar-grid" id="calendar-grid-body"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-date" id="modal-date-text">月曜日 ・ 5/25</div>
+                <div class="modal-title" id="modal-title-text">有氧跑</div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label class="form-label">修改今日計畫名稱</label>
+                    <input type="text" class="form-input" id="custom-title">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">修改今日目標</label>
+                    <input type="text" class="form-input" id="custom-desc">
+                </div>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 8px 0 16px 0;">
+
+            <div class="form-group">
+                <label class="form-label">實際跑量距離 (KM)</label>
+                <input type="text" class="form-input" id="input-distance" placeholder="請輸入數字數字，例如: 6">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">跑步備註 (選填)</label>
+                <input type="text" class="form-input" id="input-note" placeholder="記錄今日體感與心情">
+            </div>
+
+            <button class="btn-submit" id="btn-save">✓ 完成打卡儲存</button>
+            <button class="btn-cancel" id="btn-close">取消</button>
+        </div>
+    </div>
+
+    <script>
+        const TARGET_YEAR = 2026;
+        let currentMonth = new Date().getMonth(); // 0-11 代表 1-12 月
+        let currentView = 'list'; // 'list' 或 'cal'
+
+        // 你的專屬固定週課表樣板（已完全拿掉(一)(二)等括號稱呼）
+        const baseTemplate = {
+            1: { title: "跑休", desc: "休息", fullDay: "月曜日" },
+            2: { title: "有氧跑", desc: "6~8K", fullDay: "火曜日" },
+            3: { title: "乳酸跑", desc: "5K", fullDay: "水曜日" },
+            4: { title: "跑休", desc: "休息", fullDay: "木曜日" },
+            5: { title: "有氧跑", desc: "6~8K", fullDay: "金曜日" },
+            6: { title: "長距離 LSD", desc: "12~16K", fullDay: "土曜日" },
+            0: { title: "有氧跑", desc: "6~8K", fullDay: "日曜日" } // 0 是星期日
+        };
+
+        const weekDayLabels = ["日", "一", "二", "三", "四", "五", "六"];
+
+        /* 本地資料庫設計：
+           userRecords 內會同時記錄：
+           1. 填寫的成果：'2026-05-25': { distance: '6.5', note: '順暢' }
+           2. 臨時修改的課表：'plan-2026-05-25': { title: '變速跑', desc: '5K' }
+        */
+        let userRecords = JSON.parse(localStorage.getItem('run_logs_v2_2026')) || {};
+        let currentSelectedDateStr = null;
+
+        // DOM 元素元件
+        const listViewContainer = document.getElementById('list-view-container');
+        const calViewContainer = document.getElementById('cal-view-container');
+        const calendarGridBody = document.getElementById('calendar-grid-body');
+        const monthDisplay = document.getElementById('month-display');
+        const modal = document.getElementById('modal-overlay');
+        
+        // 初始化主題 (深色/淺色記憶)
+        let savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-toggle-btn').innerText = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        // 切換主題點擊事件
+        document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+            let currentTheme = document.documentElement.getAttribute('data-theme');
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-toggle-btn').innerText = newTheme === 'dark' ? '🌙' : '☀️';
+        });
+
+        // 核心渲染主控台
+        function renderMainView() {
+            monthDisplay.innerText = `${TARGET_YEAR} ・ ${currentMonth + 1}月`;
+            
+            const daysInMonth = new Date(TARGET_YEAR, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+            let totalKm = 0;
+            let doneCount = 0;
+
+            // 清空舊畫面
+            listViewContainer.innerHTML = '';
+            calendarGridBody.innerHTML = '';
+
+            // 如果是月曆視角，先塞入星期一到日的大標頭
+            if (currentView === 'cal') {
+                const calWeekHeaders = ["一", "二", "三", "四", "五", "六", "日"];
+                calWeekHeaders.forEach((h, idx) => {
+                    const hDiv = document.createElement('div');
+                    hDiv.className = `calendar-weekday ${idx >= 5 ? 'sat' : ''}`;
+                    hDiv.innerText = h;
+                    calendarGridBody.appendChild(hDiv);
+                });
+
+                // 計算該月第一天是星期幾，空出前面的格子
+                let firstDayOfWeek = new Date(TARGET_YEAR, currentMonth, 1).getDay();
+                // 轉換為以星期一為開頭 (1-6, 0變成7)
+                let emptyCellsCount = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                for (let e = 0; e < emptyCellsCount; e++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'cell empty';
+                    calendarGridBody.appendChild(emptyCell);
+                }
+            }
+
+            // 開始巡迴生成該月每一天
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(TARGET_YEAR, currentMonth, d);
+                const dayOfWeek = dateObj.getDay(); 
+                const dateStr = `${TARGET_YEAR}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+                // 1. 讀取課表（檢查是否有自訂修改，若無則套用基本樣板）
+                const customPlan = userRecords[`plan-${dateStr}`];
+                const planTitle = customPlan ? customPlan.title : baseTemplate[dayOfWeek].title;
+                const planDesc = customPlan ? customPlan.desc : baseTemplate[dayOfWeek].desc;
+                const fullDayName = baseTemplate[dayOfWeek].fullDay;
+
+                // 2. 讀取打卡記錄
+                const record = userRecords[dateStr];
+                const isCompleted = !!record;
+
+                if (isCompleted) {
+                    doneCount++;
+                    const num = parseFloat(record.distance);
+                    if (!isNaN(num)) totalKm += num;
+                }
+
+                // 設定週末特殊類別
+                let dayTypeClass = '';
+                if (dayOfWeek === 6) dayTypeClass = 'sat';
+                if (dayOfWeek === 0) dayTypeClass = 'sun';
+                if (dateStr === todayStr) dayTypeClass += ' is-today';
+
+                // --- 視角一：生成清單卡片 ---
+                const card = document.createElement('div');
+                card.className = `card ${isCompleted ? 'completed' : ''} ${dayTypeClass}`;
+                card.innerHTML = `
+                    <div class="card-left">
+                        <div class="card-date">
+                            <div class="date-w">${weekDayLabels[dayOfWeek]}</div>
+                            <div class="date-d">${currentMonth+1}/${d}</div>
+                        </div>
+                        <div>
+                            <div class="card-info-title">${planTitle}</div>
+                            <div class="card-info-desc">${isCompleted ? '實際: ' + record.distance + ' km' : planDesc}</div>
+                        </div>
+                    </div>
+                    <div class="check-circle"></div>
+                `;
+                card.addEventListener('click', () => openModal(dateStr, fullDayName, planTitle, planDesc));
+                listViewContainer.appendChild(card);
+
+                // --- 視角二：生成月曆方格 ---
+                if (currentView === 'cal') {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${dayTypeClass}`;
+                    
+                    let cellInner = `<span class="cell-num">${d}</span>`;
+                    if (isCompleted) {
+                        cellInner += `<div class="cell-km">🏃 ${record.distance}</div>`;
+                    } else if (planTitle !== "跑休") {
+                        cellInner += `<div class="cell-dot"></div>`;
+                    }
+                    cell.innerHTML = cellInner;
+                    cell.addEventListener('click', () => openModal(dateStr, fullDayName, planTitle, planDesc));
+                    calendarGridBody.appendChild(cell);
+                }
+            }
+
+            // 更新頂部數據
+            document.getElementById('total-km').innerText = totalKm.toFixed(1).replace('.0', '');
+            document.getElementById('done-count').innerText = doneCount;
+        }
+
+        // 開啟彈窗並帶入資料
+        function openModal(dateStr, fullDayName, planTitle, planDesc) {
+            currentSelectedDateStr = dateStr;
+            const [y, m, d] = dateStr.split('-');
+            
+            document.getElementById('modal-date-text').innerText = `${fullDayName} ・ ${parseInt(m)}/${parseInt(d)}`;
+            document.getElementById('modal-title-text').innerText = planTitle;
+
+            // 預先帶入當日課表欄位，讓使用者隨時可修改
+            document.getElementById('custom-title').value = planTitle;
+            document.getElementById('custom-desc').value = planDesc;
+
+            // 帶入跑步打卡成果欄位
+            if (userRecords[dateStr]) {
+                document.getElementById('input-distance').value = userRecords[dateStr].distance;
+                document.getElementById('input-note').value = userRecords[dateStr].note;
+            } else {
+                // 若當天尚未打卡，且課表內有數字（例如 6~8K），自動抓取第一個數字（6）作為預設跑量，省去打字時間
+                const defaultNum = planDesc.match(/\d+/);
+                document.getElementById('input-distance').value = defaultNum ? defaultNum[0] : '';
+                document.getElementById('input-note').value = '';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // 按下儲存打卡按鈕
+        document.getElementById('btn-save').addEventListener('click', () => {
+            if (currentSelectedDateStr) {
+                const newTitle = document.getElementById('custom-title').value.trim();
+                const newDesc = document.getElementById('custom-desc').value.trim();
+                const distValue = document.getElementById('input-distance').value.trim();
+                const noteValue = document.getElementById('input-note').value.trim();
+
+                // 1. 處理課表修改儲存
+                const dateObj = new Date(currentSelectedDateStr.replace(/-/g, '/'));
+                const dayOfWeek = dateObj.getDay();
+                
+                // 如果使用者改的課表名稱與原本樣板不符，就記錄為自訂課表
+                if (newTitle !== baseTemplate[dayOfWeek].title || newDesc !== baseTemplate[dayOfWeek].desc) {
+                    userRecords[`plan-${currentSelectedDateStr}`] = { title: newTitle, desc: newDesc };
+                } else {
+                    delete userRecords[`plan-${currentSelectedDateStr}`];
+                }
+
+                // 2. 處理跑量打卡儲存 (若欄位為空則視為刪除/取消打卡)
+                if (distValue === '') {
+                    delete userRecords[currentSelectedDateStr];
+                } else {
+                    userRecords[currentSelectedDateStr] = { distance: distValue, note: noteValue };
+                }
+
+                localStorage.setItem('run_logs_v2_2026', JSON.stringify(userRecords));
+                renderMainView();
+                closeModal();
+            }
+        });
+
+        // 視角切換器點擊事件
+        document.getElementById('view-list-btn').addEventListener('click', () => {
+            currentView = 'list';
+            document.getElementById('view-list-btn').classList.add('active');
+            document.getElementById('view-cal-btn').classList.remove('active');
+            listViewContainer.classList.remove('hidden');
+            calViewContainer.classList.add('hidden');
+            renderMainView();
+        });
+
+        document.getElementById('view-cal-btn').addEventListener('click', () => {
+            currentView = 'cal';
+            document.getElementById('view-cal-btn').classList.add('active');
+            document.getElementById('view-list-btn').classList.remove('active');
+            listViewContainer.classList.add('hidden');
+            calViewContainer.classList.remove('hidden');
+            renderMainView();
+        });
+
+        // 月份切換按鈕事件
+        document.getElementById('prev-month').addEventListener('click', () => {
+            if (currentMonth > 0) { currentMonth--; renderMainView(); window.scrollTo(0, 0); }
+        });
+        document.getElementById('next-month').addEventListener('click', () => {
+            if (currentMonth < 11) { currentMonth++; renderMainView(); window.scrollTo(0, 0); }
+        });
+
+        document.getElementById('btn-close').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        // 網頁啟動初始化
+        renderMainView();
+    </script>
+</body>
+</html>
