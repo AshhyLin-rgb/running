@@ -524,15 +524,15 @@
         let currentView = 'list'; // 'list' 或 'cal'
 
         // 你的專屬固定週課表樣板（已完全拿掉(一)(二)等括號稱呼）
-        const baseTemplate = {
-            1: { title: "跑休", desc: "休息", fullDay: "月曜日" },
-            2: { title: "有氧跑", desc: "6~8K", fullDay: "火曜日" },
-            3: { title: "乳酸跑", desc: "5K", fullDay: "水曜日" },
-            4: { title: "跑休", desc: "休息", fullDay: "木曜日" },
-            5: { title: "有氧跑", desc: "6~8K", fullDay: "金曜日" },
-            6: { title: "長距離 LSD", desc: "12~16K", fullDay: "土曜日" },
-            0: { title: "有氧跑", desc: "6~8K", fullDay: "日曜日" } // 0 是星期日
-        };
+       const baseTemplate = {
+    1: { title: "Active Recovery 🧘", desc: "休息", fullDay: "月曜日" },
+    2: { title: "Zone 2 有氧耐力跑 🏃‍♂️", desc: "6~8K", fullDay: "火曜日" },
+    3: { title: "Quality Session ⚡", desc: "5K", fullDay: "水曜日" },
+    4: { title: "Active Recovery 🧘", desc: "休息", fullDay: "木曜日" },
+    5: { title: "Zone 2 有氧耐力跑 🏃‍♂️", desc: "6~8K", fullDay: "金曜日" },
+    6: { title: "長距離 LSD", desc: "12~16K", fullDay: "土曜日" },
+    0: { title: "Zone 2 有氧耐力跑 跑鞋", desc: "6~8K", fullDay: "日曜日" }
+};
 
         const weekDayLabels = ["日", "一", "二", "三", "四", "五", "六"];
 
